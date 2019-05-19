@@ -12,17 +12,17 @@ int main ( int argc, char *argv[] )
     int numProc;
     printf("Enter number processes: ");
     scanf("%d", &numProc);
+    read(0,buf,4);
+    printf(buf);
     makeChild(numProc);
     
 }
 
-void makeChild(int i){
-
+void makeChild(int prcNum){
     int pid;
     int mypipefd[2];
     int ret;
     char buf[30];
-
     ret = pipe(mypipefd);
 
     if (ret == -1){
@@ -30,34 +30,31 @@ void makeChild(int i){
         exit(1);
     }
 
-
-    else if (pid == 0){
-
-
-        macheChild(i-1);
-    }
-    else {
-        close(mypipefd[0]);
-        write(mypipefd[1], "hello", 5);
-    }
-
-
-
-    for(i = 0; i < 5; i++) {
     pid = fork();
+
     if(pid < 0) {
         printf("Error");
         exit(1);
-    } else if (pid == 0) {
-        printf("Child (%d): %d\n", i + 1, getpid());
-        close(mypipefd[1]);
-        read(mypipefd[0], buf, 8);
-        printf("Entering new loop \n");
-    } else  {
-        printf("Terminating child (%d) \n ", i);
-        exit(0);
     }
+    else if (pid == 0){
+        printf("Child process \n");
 
+        close(mypipefd[1]);
+        read(mypipefd[0], buf, 4);
+
+        printf("buf; %s\n", buf);
+    }
+    else {
+        printf("Processus (%d) commence \n", prcNum);
+
+        close(mypipefd[0]);
+        write(mypipefd[1], "hello", 4);
+        sleep(5);
+
+        printf("Processus (%d) terminé \n", prcNum);
+        sleep(10);
+    }
 }
 
-}
+
+
