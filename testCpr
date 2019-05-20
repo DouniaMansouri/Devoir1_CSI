@@ -21,7 +21,7 @@ Explication du processus zombie
 #include <sys/types.h>
 #include <string.h>
 
-#define BUFFER_SIZE 25
+#define BUFFER_SIZE 50
 #define READ_END 0
 #define WRITE_END 1
 /* Prototype */
@@ -101,9 +101,9 @@ void creerEnfantEtLire(int prcNum)
 
 	pid_t pid;
 	int tuyau;
-	int num;
 	int pipes[2];
-	char writeMessage[BUFFER_SIZE] = "Processus 1 commence";
+	int num = prcNum;
+	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
 	char readMessage[BUFFER_SIZE];
 
 
@@ -126,7 +126,13 @@ void creerEnfantEtLire(int prcNum)
 
 			read(pipes[READ_END], readMessage, BUFFER_SIZE);
 
-			printf("Child read: %s\n", readMessage);
+			for(int i=num; i>=1; i--){
+
+			printf(readMessage, num);
+			num--;
+
+			}
+
 
 			close(pipes[READ_END]);
 
