@@ -17,7 +17,13 @@ Explication du processus zombie
 -------------------------------------------------------------*/
 #include <stdio.h>
 #include <sys/select.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <string.h>
 
+#define BUFFER_SIZE 25
+#define READ_END 0
+#define WRITE_END 1
 /* Prototype */
 void creerEnfantEtLire(int );
 
@@ -93,38 +99,59 @@ void creerEnfantEtLire(int prcNum)
 	        printf("buf; %s\n", buf);
 	    }*/
 
-	int pid;
+	pid_t pid;
 	int tuyau;
 	int num;
-	int mypipefd[2];
-	char buf[10];
+	int pipes[2];
+	char writeMessage[BUFFER_SIZE] = "Processus 1 commence";
+	char readMessage[BUFFER_SIZE];
 
-	tuyau = pipe(mypipefd);
 
-	 if (tuyau == -1){
-		        perror("pipe has an error");
-		        exit(1);
+
+	tuyau = pipe(pipes);
+
+	if (tuyau == -1){
+		perror("pipe has an error");
+		exit(1);
 	}
-	 num = 0;
-
-	tuyau = dup2(prcNum, prcNum-1);
 
 	pid = fork();
 
-	if (pid ==0){
+	if (pid < 0){
+		printf("Fork failed");
+	}
 
+	if (pid ==0){ //child
+			close(pipes[WRITE_END]);
+
+			read(pipes[READ_END], readMessage, BUFFER_SIZE);
+
+			printf("Child read: %s\n", readMessage);
+
+			close(pipes[READ_END]);
+
+/*			while(){
+				read(pipes[0]);
+
+			}
 
 			printf("Processus %num commence \n");
 			sleep(5);
-			printf("Processus %num termine \n");
+			printf("Processus %num termine \n");*/
 
 
 
 	}
-	else {
-		printf("Processus 1 commence \n");
+	else { // parent
+		close(pipes[READ_END]);
+
+		write(pipes[WRITE_END], writeMessage, strlen(writeMessage)+1);
+
+		close(pipes[WRITE_END]);
+
+/*		printf("Processus 1 commence \n");
 		sleep(5);
-		printf("Processus 1 termine \n");
+		printf("Processus 1 termine \n");*/
 
 	}
 
