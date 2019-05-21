@@ -24,7 +24,7 @@ void makeChild(int i){
     if(pid < 0) {
         printf("Error");
         exit(1);
-    } else if (pid == 0) {
+    } else if (pid == 0){
         printf("Child (%d): %d\n", i + 1, getpid());
         printf("Entering new loop \n");
     } else  {

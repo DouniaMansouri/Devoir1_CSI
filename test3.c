@@ -5,54 +5,59 @@
 
 // mettre ensemble
 
-void makeChild(int);
+void creerEnfantEtLire(int);
 
-int main ( int argc, char *argv[] )
+int main(int ac, char **av)
 {
-    int numProc;
-    printf("Enter number processes: ");
-    scanf("%d", &numProc);
-    read(0,buf,4);
-    printf(buf);
-    makeChild(numProc);
+    int numeroProcessus;
+
+    if(ac == 2)
+    {
+       if(sscanf(av[1],"%d",&numeroProcessus) == 1)
+       {
+           creerEnfantEtLire(numeroProcessus);
+       }
+       else fprintf(stderr,"Ne peut pas traduire argument\n");
+    }
+    else fprintf(stderr,"Arguments pas valide\n");
+    return(0);
     
 }
 
-void makeChild(int prcNum){
+void creerEnfantEtLire(int prcNum){
     int pid;
     int mypipefd[2];
     int ret;
+    char buf2[10];
     char buf[30];
+    sprintf(buf2, "%d", (prcNum-1));
+    char* arg[]={"./a.out", buf2, NULL};
+
     ret = pipe(mypipefd);
 
     if (ret == -1){
         perror("pipe");
         exit(1);
     }
-
+   
     pid = fork();
 
     if(pid < 0) {
         printf("Error");
         exit(1);
-    }
-    else if (pid == 0){
-        printf("Child process \n");
-
+    } else if (pid == 0){
         close(mypipefd[1]);
-        read(mypipefd[0], buf, 4);
-
-        printf("buf; %s\n", buf);
-    }
-    else {
         printf("Processus (%d) commence \n", prcNum);
-
-        close(mypipefd[0]);
-        write(mypipefd[1], "hello", 4);
         sleep(5);
-
         printf("Processus (%d) terminé \n", prcNum);
-        sleep(10);
+        dup2(0, mypipefd[1]);
+        sprintf(buf2, "%d", (prcNum-1));
+        printf("%s", buf2);
+        execvp(arg[0], arg);
+    } else  { 
+        close(mypipefd[0]);
+        read(mypipefd[0], buf, 30);
+        printf("Heres the buf: (%s) \n", buf);
     }
 }
 
