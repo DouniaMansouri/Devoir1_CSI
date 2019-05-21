@@ -76,100 +76,66 @@ Description:
 void creerEnfantEtLire(int prcNum)
 {
 
-		/*int pid;
-	    int mypipefd[2];
-	    int ret;
-	    char buf[10];
-
-	    ret = pipe(mypipefd);
-
-	    if (ret == -1){
-	        perror("pipe");
-	        exit(1);
-	    }
-
-	    pid = fork();
-	    if (pid == 0){
-	        printf("Child \n");
-	        write(mypipefd[1], "hello", 5);
-	    }
-	    else {
-	        printf("Parent \n");
-	        read(mypipefd[0], buf, 8);
-	        printf("buf; %s\n", buf);
-	    }*/
-
 	pid_t pid;
-	int tuyau;
-	int pipes[2];
-	int num = prcNum;
-	int ancienNum=0;
-	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
-	char readMessage[BUFFER_SIZE];
+		int ret;
+		int mypipefd[2];
+		char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
+		char readMessage[BUFFER_SIZE];
 
+	    char buf2[10];
+	    sprintf(buf2, "%d", (prcNum-1));
+	    char **arg[]={"/Users/douniamansouri/eclipse-workspace/Devoir1_CSI3531/src/a.out", buf2, NULL};
 
+		ret = pipe(mypipefd);
 
-	tuyau = pipe(pipes);
+		if (ret == -1){
+			perror("pipe has an error");
+			exit(1);
+		}
 
-	if (tuyau == -1){
-		perror("pipe has an error");
-		exit(1);
-	}
+		pid = fork();
 
-	pid = fork();
+		if (pid < 0){
+			printf("Fork failed");
+	        exit(1);
+		}
+		if (pid ==0){
+			close(mypipefd[READ_END]);
+			dup2(mypipefd[0], mypipefd[1]);
+			//write(mypipefd[READ_END], writeMessage, strlen(writeMessage)+1);
+			printf(writeMessage, prcNum);
+			sleep(5);
+			printf("Processus %d termine\n",prcNum);
+	        if (prcNum > 1){
+	            int status = execvp(arg[0], arg);
 
-	if (pid < 0){
-		printf("Fork failed");
-	}
+	            if (status == -1) {
+	            		printf("Execvp doesn't work");
 
-	if (pid ==0){ //child
-
-		// Faire le dup pour ecrire dans la sortie standard
-		// Faire le excepVP pour faire un appel recursif de la fonction
-
-		close(pipes[READ_END]);
-
-		dup2(pipes[1], pipes[0]);
-
-		char c = '0' + num;
-
-		execvp(creerEnfantEtLire, c-1);
-
-		write(pipes[READ_END], writeMessage, strlen(writeMessage)+1);
-
-		printf(writeMessage, num);
-
-		sleep(5);
-
-		printf("Processus %d termine\n", num);
+	            }
 
 
 
 
-	}
-	else { // parent
+	        }
+	        else {
+	            exit(0);
+	        }
+	        sleep(10);
 
-		// Lire du tuyau
+		}
+		else {
 
-		sleep(5);
+			close(mypipefd[WRITE_END]);
+			read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
+			printf("Allo %s \n", readMessage);
+			//printf("Processus 1 commence\n");
+			//sleep(5);
+			//printf("Processus 1 termine");
+			close(mypipefd[WRITE_END]);
 
-		close(pipes[WRITE_END]);
+		}
 
-		read(pipes[WRITE_END], readMessage, BUFFER_SIZE);
-
-		printf(readMessage);
-
-		printf("Processus 1 commence\n");
-
-		sleep(5);
-
-		printf("Processus 1 termine");
-
-		close(pipes[WRITE_END]);
-
-
-
-	}
 
 
 
