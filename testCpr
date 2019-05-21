@@ -103,6 +103,7 @@ void creerEnfantEtLire(int prcNum)
 	int tuyau;
 	int pipes[2];
 	int num = prcNum;
+	int ancienNum=0;
 	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
 	char readMessage[BUFFER_SIZE];
 
@@ -122,42 +123,51 @@ void creerEnfantEtLire(int prcNum)
 	}
 
 	if (pid ==0){ //child
-			close(pipes[WRITE_END]);
 
-			read(pipes[READ_END], readMessage, BUFFER_SIZE);
+		// Faire le dup pour ecrire dans la sortie standard
+		// Faire le excepVP pour faire un appel recursif de la fonction
 
-			for(int i=num; i>=1; i--){
+		close(pipes[READ_END]);
 
-			printf(readMessage, num);
-			num--;
+		dup2(pipes[1], pipes[0]);
 
-			}
+		char c = '0' + num;
 
+		execvp(creerEnfantEtLire, c-1);
 
-			close(pipes[READ_END]);
+		write(pipes[READ_END], writeMessage, strlen(writeMessage)+1);
 
-/*			while(){
-				read(pipes[0]);
+		printf(writeMessage, num);
 
-			}
+		sleep(5);
 
-			printf("Processus %num commence \n");
-			sleep(5);
-			printf("Processus %num termine \n");*/
+		printf("Processus %d termine\n", num);
+
 
 
 
 	}
 	else { // parent
-		close(pipes[READ_END]);
 
-		write(pipes[WRITE_END], writeMessage, strlen(writeMessage)+1);
+		// Lire du tuyau
+
+		sleep(5);
 
 		close(pipes[WRITE_END]);
 
-/*		printf("Processus 1 commence \n");
+		read(pipes[WRITE_END], readMessage, BUFFER_SIZE);
+
+		printf(readMessage);
+
+		printf("Processus 1 commence\n");
+
 		sleep(5);
-		printf("Processus 1 termine \n");*/
+
+		printf("Processus 1 termine");
+
+		close(pipes[WRITE_END]);
+
+
 
 	}
 
