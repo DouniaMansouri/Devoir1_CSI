@@ -41,7 +41,7 @@ Description:
 
 int main(int ac, char **av)
 {
-/*    int numeroProcessus;
+    int numeroProcessus;
 
     if(ac == 2)
     {
@@ -51,13 +51,13 @@ int main(int ac, char **av)
        }
        else fprintf(stderr,"Ne peut pas traduire argument\n");
     }
-    else fprintf(stderr,"Arguments pas valide\n");*/
+    else fprintf(stderr,"Arguments pas valide\n");
 
-	int numProc;
+/*	int numProc;
 	    printf("Enter number processes: ");
 	    scanf("%d", &numProc);
-	    creerEnfantEtLire(numProc);
-   // return(0);
+	    creerEnfantEtLire(numProc);*/
+    return(0);
 }
 
 
@@ -80,11 +80,12 @@ void creerEnfantEtLire(int prcNum)
 		int ret;
 		int mypipefd[2];
 		char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
+		char termineMessage[BUFFER_SIZE] = "Processus %d termine";
 		char readMessage[BUFFER_SIZE];
 
 	    char buf2[10];
 	    sprintf(buf2, "%d", (prcNum-1));
-	    char **arg[]={"/Users/douniamansouri/eclipse-workspace/Devoir1_CSI3531/src/a.out", buf2, NULL};
+	    char **arg[]={"./a.out", buf2, NULL};
 
 		ret = pipe(mypipefd);
 
@@ -94,20 +95,28 @@ void creerEnfantEtLire(int prcNum)
 		}
 
 		pid = fork();
-
+		//printf("PID %d\n" , pid);
 		if (pid < 0){
+			
 			printf("Fork failed");
 	        exit(1);
 		}
 		if (pid ==0){
-			close(mypipefd[READ_END]);
+			close(mypipefd[WRITE_END]);
 			dup2(mypipefd[0], mypipefd[1]);
-			//write(mypipefd[READ_END], writeMessage, strlen(writeMessage)+1);
-			printf(writeMessage, prcNum);
+			read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
+			
+			//write(mypipefd[READ_END], termineMessage, strlen(termineMessage)+1);
+			printf(readMessage, prcNum);
 			sleep(5);
-			printf("Processus %d termine\n",prcNum);
+			//wait(NULL);
+			
 	        if (prcNum > 1){
-	            int status = execvp(arg[0], arg);
+				
+				int status = execvp(arg[0], arg);
+				
+				
+
 
 	            if (status == -1) {
 	            		printf("Execvp doesn't work");
@@ -119,20 +128,35 @@ void creerEnfantEtLire(int prcNum)
 
 	        }
 	        else {
-	            exit(0);
-	        }
-	        sleep(10);
+				exit(0);
+				
+			}
+			
+			//sleep(10);
+			
+			
 
 		}
 		else {
 
+			close(mypipefd[READ_END]);
+			write(mypipefd[WRITE_END], writeMessage, strlen(writeMessage)+1);
+			sleep(5);
+			wait(NULL);
+			printf("Processus %d termine\n", prcNum);
+			
 			close(mypipefd[WRITE_END]);
-			read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
-			printf("Allo %s \n", readMessage);
+
+			
+			
+			//read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
+			
+		
+			//printf("I am the parent %s \n", readMessage);
 			//printf("Processus 1 commence\n");
 			//sleep(5);
 			//printf("Processus 1 termine");
-			close(mypipefd[WRITE_END]);
+			//close(mypipefd[WRITE_END]);
 
 		}
 
