@@ -95,9 +95,8 @@ void creerEnfantEtLire(int prcNum)
 		}
 
 		pid = fork();
-		//printf("PID %d\n" , pid);
+		
 		if (pid < 0){
-			
 			printf("Fork failed");
 	        exit(1);
 		}
@@ -105,64 +104,26 @@ void creerEnfantEtLire(int prcNum)
 			close(mypipefd[WRITE_END]);
 			dup2(mypipefd[0], mypipefd[1]);
 			read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
-			
-			//write(mypipefd[READ_END], termineMessage, strlen(termineMessage)+1);
 			printf(readMessage, prcNum);
 			sleep(5);
-			//wait(NULL);
-			
 	        if (prcNum > 1){
-				
 				int status = execvp(arg[0], arg);
-				
-				
-
-
 	            if (status == -1) {
 	            		printf("Execvp doesn't work");
-
 	            }
-
-
-
-
 	        }
 	        else {
-				exit(0);
-				
+				exit(0);	
 			}
-			
-			//sleep(10);
-			
-			
-
+			sleep(10);
 		}
 		else {
-
 			close(mypipefd[READ_END]);
 			write(mypipefd[WRITE_END], writeMessage, strlen(writeMessage)+1);
 			sleep(5);
 			wait(NULL);
 			printf("Processus %d termine\n", prcNum);
-			
 			close(mypipefd[WRITE_END]);
-
-			
-			
-			//read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
-			
-		
-			//printf("I am the parent %s \n", readMessage);
-			//printf("Processus 1 commence\n");
-			//sleep(5);
-			//printf("Processus 1 termine");
-			//close(mypipefd[WRITE_END]);
-
 		}
-
-
-
-
-
 
 }
