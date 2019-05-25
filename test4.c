@@ -131,8 +131,21 @@ void creerEnfantEtLire(int prcNum)
 			sleep(5);
 			
 			printf("Processus %d termine\n", prcNum);
+
+			sleep(10);
 		
 			close(mypipefd[WRITE_END]);
+
+			if (prcNum > 1 || prcNum < 1){
+				int status = execvp(arg[0], arg);
+				exit(0);
+	            if (status == -1) {
+	            	printf("Execvp doesn't work");
+	            }
+			}
+	        else {
+				wait(NULL);
+			}
 			
 		}
 
@@ -144,19 +157,19 @@ void creerEnfantEtLire(int prcNum)
 
 			read(mypipefd[READ_END], readMessage, BUFFER_SIZE);
 			printf(readMessage, prcNum);
-			close(mypipefd[READ_END]);
 
+			close(mypipefd[READ_END]);
 	
-			if (prcNum > 1 || prcNum < 1){
+			/*if (prcNum > 1 || prcNum < 1){
 				int status = execvp(arg[0], arg);
+				exit(0);
 	            if (status == -1) {
 	            	printf("Execvp doesn't work");
 	            }
 			}
 	        else {
 				wait(NULL);
-				exit(0);
-			}
+			}*/
 
 		}
 
