@@ -10,7 +10,18 @@ Description: Ce programme contient le code pour la creation
 	     qui seront ensuite envoyes a la sortie standard.
 
 Explication du processus zombie
-(point 5 de "A completer" dans le devoir):
+(point 5 de "A completer" dans le devoir): 
+
+Un processus zombie est un processus enfant qui a terminé son exécution, mais qui existe encore dans la table de processus.
+Afin de retirer l'enfant de la table, le processus parent doit recevoir un signal que l'enfant a fini son exécution, ensuite
+appelle la fonction wait() afin de recevoir le exit status de l'enfant.
+
+On observe ceci en exécutant ce programme: sur la ligne de commande, on remarque que le processus enfant et le processus parent 
+existent ensemble pour un moment, même si le processus enfant a fini d'exécuter son programme. Lorsque le prochain processus est mis en marche,
+le processus enfant disparaît, et le prochain processus prend son pid.
+
+Sources: https://www.developpez.net/forums/d1545567/c-cpp/c/fork-processus-zombie-processus-orphelin/
+http://www.groupes.polymtl.ca/inf2610/documentation/notes/chap3.pdf
 
 	(s.v.p. completez cette partie);
 
@@ -19,7 +30,6 @@ Explication du processus zombie
 #include <sys/select.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define BUFFER_SIZE 50
@@ -53,8 +63,12 @@ int main(int ac, char **av)
        else fprintf(stderr,"Ne peut pas traduire argument\n");
     }
     else fprintf(stderr,"Arguments pas valide\n");
+
+/*	int numProc;
+	    printf("Enter number processes: ");
+	    scanf("%d", &numProc);
+	    creerEnfantEtLire(numProc);*/
     return(0);
-    
 }
 
 
@@ -72,17 +86,29 @@ Description:
 
 void creerEnfantEtLire(int prcNum)
 {
+	if (prcNum < 1){
+		printf("Numéro de processus non valide! \n");
+		exit(1);
+	}
+
 	pid_t pid;
 	int ret;
+	int nombre = 0;
+	
+	//int ret2;
 	int mypipefd[2];
+	//int mypipefd2[2];
+
 	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
+	char termineMessage[BUFFER_SIZE] = "Processus %d termine\n";
 	char readMessage[BUFFER_SIZE];
 
-    char buf2[10];
-    sprintf(buf2, "%d", (prcNum-1));
-    char* arg[]={"./a.out", buf2, NULL};
+	char buf2[10];
+	sprintf(buf2, "%d", (prcNum-1));
+	char **arg[]={"./a.out", buf2, NULL};
 
 	ret = pipe(mypipefd);
+	//ret2 = pipe(mypipefd2);
 
 	if (ret == -1){
 		perror("pipe has an error");
@@ -90,40 +116,49 @@ void creerEnfantEtLire(int prcNum)
 	}
 
 	pid = fork();
-
-	if (pid < 0){
+	
+	if (pid < 0){	
 		printf("Fork failed");
-        exit(1);
-	}
-	if (pid ==0){
-		close(mypipefd[READ_END]);
-		dup2(mypipefd[1], mypipefd[0]);
-		//write(pipes[READ_END], writeMessage, strlen(writeMessage)+1);
-		printf(writeMessage, prcNum);
-		sleep(5);
-		printf("Processus %d termine\n",prcNum);
-        if (prcNum > 1){
-            execvp(arg[0], arg);
-        }
-        else {
-            exit(0);
-        }
-        sleep(10);
+	        exit(1);
+		};
+	
+	if (pid ==0){ //child
 
-	}
-	else { 
-		close(mypipefd[WRITE_END]);
-		read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
-		printf("Allo %s \n", readMessage);
-		//printf("Processus 1 commence\n");
-		//sleep(5);
-		//printf("Processus 1 termine");
-		close(mypipefd[WRITE_END]);
+			close(mypipefd[READ_END]);
 
-	}
+			write(mypipefd[WRITE_END], writeMessage, BUFFER_SIZE);
 
+			sleep(5);
+			
+			printf("Processus %d termine\n", prcNum);
+		
+			close(mypipefd[WRITE_END]);
+			
+		}
 
+		else { //parent 
 
+			close(mypipefd[WRITE_END]);
+			
+			dup2(mypipefd[0], mypipefd[1]);
+
+			read(mypipefd[READ_END], readMessage, BUFFER_SIZE);
+			printf(readMessage, prcNum);
+			close(mypipefd[READ_END]);
+
+	
+			if (prcNum > 1 || prcNum < 1){
+				int status = execvp(arg[0], arg);
+	            if (status == -1) {
+	            	printf("Execvp doesn't work");
+	            }
+			}
+	        else {
+				wait(NULL);
+				exit(0);
+			}
+
+		}
 
 
 }
