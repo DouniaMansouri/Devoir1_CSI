@@ -12,6 +12,10 @@ Description: Ce programme contient le code pour la creation
 Explication du processus zombie
 (point 5 de "A completer" dans le devoir):
 
+Un processus zombie est un processus enfant qui a terminé son exécution, mais existe encore comme processus.
+Afin de retirer l'enfant de la table, le processus parent doit recevoir un signal que l'enfant a fini son exécution,
+ensuite appelle la fonction wait() afin de recevoir le exit status de l'enfant.
+
 	(s.v.p. completez cette partie);
 
 -------------------------------------------------------------*/
@@ -75,7 +79,7 @@ void creerEnfantEtLire(int prcNum)
 		printf("Nombre de processus invalide! \n");
 		exit(1);
 	}
-	
+
 	pid_t pid;
 	int ret;
 	int mypipefd[2];
