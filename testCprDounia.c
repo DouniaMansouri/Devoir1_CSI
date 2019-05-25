@@ -115,7 +115,8 @@ void creerEnfantEtLire(int prcNum)
 			printf("Fork failed");
 	        exit(1);
 		}
-		if (pid ==0){
+		printf("pid: %d",pid);
+		if (pid ==0){ //child
 
 	
 
@@ -175,30 +176,29 @@ void creerEnfantEtLire(int prcNum)
 			
 
 		}
-		else {
+		else { //parent 
 
 			close(mypipefd[READ_END]);
 
 			
 
+			int nombre = prcNum;
 
+			//printf("nombre: %d", nombre);
 
 			write(mypipefd[WRITE_END], writeMessage, strlen(writeMessage)+1);
 			sleep(5);
-			//int nombre = prcNum;
-
-				printf("Processus %d termine\n", prcNum);
+			wait(NULL);
 			
-			
-
-			
-
+			printf("Processus %d termine\n", prcNum);
+		
 
 			close(mypipefd[WRITE_END]);
 			
 			
 
-			//wait(NULL);
+			
+			
 			//sleep(5);
 			//write(mypipefd[WRITE_END], termineMessage, strlen(termineMessage)+1);
 
