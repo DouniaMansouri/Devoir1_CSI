@@ -1,8 +1,8 @@
 /*------------------------------------------------------------
 Fichier: cpr.c
 
-Nom:
-Numero d'etudiant:
+Nom: Dounia Mansouri, Sacha Chow-Cloutier
+Numero d'etudiant:      ,300017286
 
 Description: Ce programme contient le code pour la creation
              d'un processus enfant et y attacher un tuyau.
@@ -24,6 +24,7 @@ Explication du processus zombie
 #define BUFFER_SIZE 50
 #define READ_END 0
 #define WRITE_END 1
+
 /* Prototype */
 void creerEnfantEtLire(int );
 
@@ -52,11 +53,6 @@ int main(int ac, char **av)
        else fprintf(stderr,"Ne peut pas traduire argument\n");
     }
     else fprintf(stderr,"Arguments pas valide\n");
-
-/*	int numProc;
-	    printf("Enter number processes: ");
-	    scanf("%d", &numProc);
-	    creerEnfantEtLire(numProc);*/
     return(0);
 }
 
@@ -75,49 +71,54 @@ Description:
 
 void creerEnfantEtLire(int prcNum)
 {
-
+	if (prcNum < 1){
+		printf("Nombre de processus invalide! \n");
+		exit(1);
+	}
+	
 	pid_t pid;
-		int ret;
-		int mypipefd[2];
-		char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
-		char termineMessage[BUFFER_SIZE] = "Processus %d termine";
-		char readMessage[BUFFER_SIZE];
+	int ret;
+	int mypipefd[2];
+	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
+	char termineMessage[BUFFER_SIZE] = "Processus %d termine";
+	char readMessage[BUFFER_SIZE];
 
-	    char buf2[10];
-	    sprintf(buf2, "%d", (prcNum-1));
-	    char **arg[]={"./a.out", buf2, NULL};
+	char buf2[10];
+	sprintf(buf2, "%d", (prcNum-1));
+	char **arg[]={"./a.out", buf2, NULL};
 
-		ret = pipe(mypipefd);
+	ret = pipe(mypipefd);
 
-		if (ret == -1){
-			perror("pipe has an error");
-			exit(1);
-		}
+	if (ret == -1){
+		perror("pipe has an error");
+		exit(1);
+	}
 
-		pid = fork();
+	pid = fork(); //crée le processus enfant
 		
-		if (pid < 0){
-			printf("Fork failed");
-	        exit(1);
-		}
-		if (pid ==0){
-			close(mypipefd[WRITE_END]);
-			dup2(mypipefd[0], mypipefd[1]);
-			read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
-			printf(readMessage, prcNum);
-			sleep(5);
-	        if (prcNum > 1){
-				int status = execvp(arg[0], arg);
-	            if (status == -1) {
-	            		printf("Execvp doesn't work");
-	            }
+	if (pid < 0){
+		printf("Fork failed");
+	    exit(1);
+	}
+	if (pid ==0){
+		close(mypipefd[WRITE_END]);
+		dup2(mypipefd[0], mypipefd[1]);
+		read(mypipefd[WRITE_END], readMessage, BUFFER_SIZE);
+		printf(readMessage, prcNum);
+		sleep(5);
+	    if (prcNum > 1){ //si prcNum >1, on continue de créer des enfants
+			int status = execvp(arg[0], arg);
+	        if (status == -1) {
+	        	printf("Execvp doesn't work");
 	        }
-	        else {
-				exit(0);	
-			}
-			sleep(10);
+	    }
+	    else {
+			exit(0);	
 		}
-		else {
+		sleep(10);
+		}
+
+		else { //processus parent
 			close(mypipefd[READ_END]);
 			write(mypipefd[WRITE_END], writeMessage, strlen(writeMessage)+1);
 			sleep(5);
@@ -125,5 +126,4 @@ void creerEnfantEtLire(int prcNum)
 			printf("Processus %d termine\n", prcNum);
 			close(mypipefd[WRITE_END]);
 		}
-
 }
