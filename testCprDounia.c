@@ -1,13 +1,16 @@
 /*------------------------------------------------------------
 Fichier: cpr.c
-Nom:
-Numero d'etudiant:
+Nom: Dounia Mansouri, Sacha Chow-Cloutier
+Numero d'etudiant:  ,300017286
+
 Description: Ce programme contient le code pour la creation
              d'un processus enfant et y attacher un tuyau.
-	     L'enfant envoyera des messages par le tuyau
-	     qui seront ensuite envoyes a la sortie standard.
+	    	 L'enfant envoyera des messages par le tuyau
+	     	qui seront ensuite envoyes a la sortie standard.
+
 Explication du processus zombie
 (point 5 de "A completer" dans le devoir): 
+
 Un processus zombie est un processus enfant qui a terminé son exécution, mais qui existe encore dans la table de processus.
 Afin de retirer l'enfant de la table, le processus parent doit recevoir un signal que l'enfant a fini son exécution, ensuite
 appelle la fonction wait() afin de recevoir le exit status de l'enfant.
@@ -48,7 +51,7 @@ int main(int ac, char **av)
 	int numeroProcessus;
 	int     fd[2], nbytes;
 	pid_t   childpid;
-	char    string[] = "Hello, world!\n";
+	//char    string[] = "Hello, world!\n";
 	char    readbuffer[80];
 
     if(ac == 2)
@@ -82,7 +85,6 @@ Description:
 void creerEnfantEtLire(int prcNum)
 {
 	
-
 	pid_t pid;
 	int ret;
 	int nombre = 0;
@@ -116,64 +118,53 @@ void creerEnfantEtLire(int prcNum)
 	
 	if((childpid = fork()) == -1)
 	{
-			perror("fork");
-			exit(1);
+		perror("fork");
+		exit(1);
 	}
 	
 
 	if(childpid == 0)
 	{
+		close(fd[0]);
+		char buf3[100];
+		sprintf(buf3, writeMessage, (prcNum));
+		//printf(buf3);
+		write(fd[1], buf3, (strlen(buf3)+1));
 
-		 close(fd[0]);
-		 char buf3[100];
-		 sprintf(buf3, writeMessage, (prcNum));
-		 //printf(buf3);
-		 write(fd[1], buf3, (strlen(buf3)+1));
-
-
-			dup2(fd[0], fd[1]);
-			/* Read in a string from the pipe */
+		dup2(fd[0], fd[1]);
+		/* Read in a string from the pipe */
 			
-			if (prcNum > 1){
-				execvp("./a.out", arg);
-
-			}
+		if (prcNum > 1){
+			execvp("./a.out", arg);
+		}
 			
-			/* Child process closes up input side of pipe */
-			
-
-			/* Send "string" through the output side of pipe */
-			//terminate
-			
+		/* Child process closes up input side of pipe */
+		/* Send "string" through the output side of pipe */
+		//terminate		
 
 	}
 	else
 	{
-			/* Parent process closes up output side of pipe */
-			sleep(5);
-			close(fd[1]);
-
+		/* Parent process closes up output side of pipe */
+		sleep(5);
+		close(fd[1]);
 			
-			
-			nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
-			printf( "%s \n", readbuffer);
+		nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
+		printf( "%s \n", readbuffer);
 
 			
 	}
-
 	
-if (childpid != 0){
+	if (childpid != 0){
+		nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
+		if (nbytes <=0 && prcNum >= 1) {
+			char buf4[100];
+			sprintf(buf4, termineMessage, (prcNum));
+			printf( "%s\n", buf4);
+			exit(0);
+		}
 
-	nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
-	if (nbytes <=0 && prcNum >= 1) {
-		char buf4[100];
-		sprintf(buf4, termineMessage, (prcNum));
-		printf( "%s\n", buf4);
-		exit(0);
 	}
-
-
-}
 	
 
 	
