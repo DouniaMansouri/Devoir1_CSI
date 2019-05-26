@@ -1,30 +1,22 @@
 /*------------------------------------------------------------
 Fichier: cpr.c
-
 Nom:
 Numero d'etudiant:
-
 Description: Ce programme contient le code pour la creation
              d'un processus enfant et y attacher un tuyau.
 	     L'enfant envoyera des messages par le tuyau
 	     qui seront ensuite envoyes a la sortie standard.
-
 Explication du processus zombie
 (point 5 de "A completer" dans le devoir): 
-
 Un processus zombie est un processus enfant qui a terminé son exécution, mais qui existe encore dans la table de processus.
 Afin de retirer l'enfant de la table, le processus parent doit recevoir un signal que l'enfant a fini son exécution, ensuite
 appelle la fonction wait() afin de recevoir le exit status de l'enfant.
-
 On observe ceci en exécutant ce programme: sur la ligne de commande, on remarque que le processus enfant et le processus parent 
 existent ensemble pour un moment, même si le processus enfant a fini d'exécuter son programme. Lorsque le prochain processus est mis en marche,
 le processus enfant disparaît, et le prochain processus prend son pid.
-
 Sources: https://www.developpez.net/forums/d1545567/c-cpp/c/fork-processus-zombie-processus-orphelin/
 http://www.groupes.polymtl.ca/inf2610/documentation/notes/chap3.pdf
-
 	(s.v.p. completez cette partie);
-
 -------------------------------------------------------------*/
 #include <stdio.h>
 #include <sys/select.h>
@@ -37,6 +29,7 @@ http://www.groupes.polymtl.ca/inf2610/documentation/notes/chap3.pdf
 #define WRITE_END 1
 /* Prototype */
 void creerEnfantEtLire(int );
+void creerEnfantEtLire2(int );
 
 /*-------------------------------------------------------------
 Function: main
@@ -52,25 +45,27 @@ Description:
 
 int main(int ac, char **av)
 {
-    int numeroProcessus;
+	int numeroProcessus;
+	int     fd[2], nbytes;
+	pid_t   childpid;
+	char    string[] = "Hello, world!\n";
+	char    readbuffer[80];
 
     if(ac == 2)
     {
        if(sscanf(av[1],"%d",&numeroProcessus) == 1)
        {
-           creerEnfantEtLire(numeroProcessus);
+		   creerEnfantEtLire(numeroProcessus);
+		   
+
        }
        else fprintf(stderr,"Ne peut pas traduire argument\n");
     }
     else fprintf(stderr,"Arguments pas valide\n");
 
-/*	int numProc;
-	    printf("Enter number processes: ");
-	    scanf("%d", &numProc);
-	    creerEnfantEtLire(numProc);*/
+
     return(0);
 }
-
 
 /*-------------------------------------------------------------
 Function: creerEnfantEtLire
@@ -86,17 +81,19 @@ Description:
 
 void creerEnfantEtLire(int prcNum)
 {
-	if (prcNum < 1){
-		printf("Numéro de processus non valide! \n");
-		exit(1);
-	}
+	
 
 	pid_t pid;
 	int ret;
 	int nombre = 0;
+	int numeroProcessus;
+	int     fd[2], nbytes;
+	pid_t   childpid;
+	//char    string[] = "Hello, world!\n";
+	char    readbuffer[80];
 	
 	//int ret2;
-	int mypipefd[2];
+	//int fd[2];
 	//int mypipefd2[2];
 
 	char writeMessage[BUFFER_SIZE] = "Processus %d commence\n";
@@ -105,88 +102,88 @@ void creerEnfantEtLire(int prcNum)
 
 	char buf2[10];
 	sprintf(buf2, "%d", (prcNum-1));
+	//printf(buf2);
 	char **arg[]={"./a.out", buf2, NULL};
 
-	ret = pipe(mypipefd);
-	//ret2 = pipe(mypipefd2);
-
-	if (ret == -1){
-		perror("pipe has an error");
+	//printf("pcNum: %d", prcNum);
+	if (prcNum < 1){
+		printf("Numéro de processus non valide! \n");
 		exit(1);
 	}
 
-	pid = fork();
-	
-	if (pid < 0){	
-		printf("Fork failed");
-	        exit(1);
-		}
 
-	//printf("pid: %d",pid);
+	pipe(fd);
 	
-	if (pid ==0){ //child
+	if((childpid = fork()) == -1)
+	{
+			perror("fork");
+			exit(1);
+	}
+	
 
-			close(mypipefd[WRITE_END]);
+	if(childpid == 0)
+	{
+
+		 close(fd[0]);
+		 char buf3[100];
+		 sprintf(buf3, writeMessage, (prcNum));
+		 //printf(buf3);
+		 write(fd[1], buf3, (strlen(buf3)+1));
+
+
+			dup2(fd[0], fd[1]);
+			/* Read in a string from the pipe */
 			
-			dup2(mypipefd[0], mypipefd[1]);
+			if (prcNum > 1){
+				execvp("./a.out", arg);
 
-			read(mypipefd[READ_END], readMessage, BUFFER_SIZE);
-			printf(readMessage, prcNum);
-			close(mypipefd[READ_END]);
-
-			//close(mypipefd[WRITE_END]);
-			
-			//close(mypipefd[WRITE_END]);
-	
-			sleep(10);
-
-	        if (prcNum > 1 || prcNum < 1){
-				int status = execvp(arg[0], arg);
-	            if (status == -1) {
-	            		printf("Execvp doesn't work");
-	            }
-	        }
-	        else {
-				exit(0);
 			}
+			
+			/* Child process closes up input side of pipe */
+			
 
-		}
-		else { //parent 
+			/* Send "string" through the output side of pipe */
+			//terminate
+			
 
-			close(mypipefd[READ_END]);
-
-			int nombre = prcNum;
-
-			//printf("nombre: %d", nombre);
-
-			write(mypipefd[WRITE_END], writeMessage, strlen(writeMessage)+1);
+	}
+	else
+	{
+			/* Parent process closes up output side of pipe */
 			sleep(5);
-			wait(NULL);
-			
-			printf("Processus %d termine\n", prcNum);
-		
-			close(mypipefd[WRITE_END]);
-			
-			
-			//sleep(5);
-			//write(mypipefd[WRITE_END], termineMessage, strlen(termineMessage)+1);
-
-			//printf(close(mypipefd[WRITE_END]));
-
-			//if (close(mypipefd[WRITE_END]) == 0) {
-				//printf("Processus %d termine\n", prcNum);
-			//}
+			close(fd[1]);
 
 			
-			//sleep(5);
-			//close(mypipefd[WRITE_END]);
+			
+			nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
+			printf( "%s \n", readbuffer);
 
 			
-		}
+	}
+
+	
+
+	nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
+	if (nbytes <=0 && prcNum >= 1) {
+		char buf4[100];
+		sprintf(buf4, termineMessage, (prcNum));
+		printf( "%s\n", buf4);
+		exit(0);
+	}
 
 
-
-
-
-
+	
 }
+
+
+
+
+	
+	
+	
+	
+	
+
+
+
+
