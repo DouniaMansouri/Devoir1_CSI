@@ -162,6 +162,7 @@ void creerEnfantEtLire(int prcNum)
 	}
 
 	
+if (childpid != 0){
 
 	nbytes = read(fd[0], readbuffer, sizeof(readbuffer));
 	if (nbytes <=0 && prcNum >= 1) {
@@ -171,6 +172,9 @@ void creerEnfantEtLire(int prcNum)
 		exit(0);
 	}
 
+
+}
+	
 
 	
 }
